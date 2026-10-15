@@ -64,7 +64,7 @@ def filter_subpaths(routes):
     return filtered
 
 
-def get_candidates(data, k, max_time, remove_subpaths): 
+def get_candidates(data, k, max_time): 
     graph = data["graph"]
     routes = {}
 
@@ -75,8 +75,6 @@ def get_candidates(data, k, max_time, remove_subpaths):
             if route["travel_time"] <= max_time:
                 routes[lid] = route
                 
-        if remove_subpaths:
-            routes = filter_subpaths(routes)
             
         return routes
 
@@ -98,9 +96,6 @@ def get_candidates(data, k, max_time, remove_subpaths):
                     routes[len(routes) + 1] = route
         except nx.NetworkXNoPath:
             continue
-
-    if remove_subpaths:
-        routes = filter_subpaths(routes)
     
     return routes
 

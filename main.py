@@ -11,13 +11,10 @@ data = load_dataset(root / "dataset/mandl/basis")
 
 # Candidate generation parameters
 k = 3
-max_time = 30
-remove_subpaths = True
+max_time = 40
 
-candidates = get_candidates(data, k=k, max_time=max_time, 
-                            remove_subpaths=remove_subpaths)
+candidates = get_candidates(data, k=k, max_time=max_time)
 
-print("Candidate routes:", len(candidates))
 
 # Exact optimization parameters
 p = 5
