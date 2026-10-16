@@ -30,6 +30,8 @@ results = solve_exact(
     alpha=alpha
 )
 
+
+# heuristic methods
 heuristic_results = solve_heuristic(
     data=data,
     candidates=candidates,
