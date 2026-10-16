@@ -2,6 +2,7 @@ from pathlib import Path
 from src.data_loader import load_dataset
 from src.candidate_routes import get_candidates
 from src.exact_method import solve_exact
+from src.heuristic_method import solve_heuristic
 
 root = Path(__file__).resolve().parent
 
@@ -28,3 +29,16 @@ results = solve_exact(
     B=B,
     alpha=alpha
 )
+
+heuristic_results = solve_heuristic(
+    data=data,
+    candidates=candidates,
+    p=p,
+    B=B,
+    alpha=alpha,
+    restarts=30,
+    seed=42
+)
+
+print("\n--- Heuristic Results ---")
+print(heuristic_results)
