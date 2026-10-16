@@ -1,4 +1,3 @@
-
 from itertools import combinations
 from time import perf_counter
 
@@ -45,9 +44,6 @@ def solve_exact(data, candidates, p, B, alpha=1.5):
     if n_lines == 0:
         raise ValueError("Candidate route pool is empty.")
 
-    # Variable indices:
-    # x variables: 0, ..., n_lines - 1
-    # y variables: n_lines, ..., n_lines + n_od - 1
 
     line_index = {
         l: i for i, l in enumerate(line_ids)
@@ -58,20 +54,20 @@ def solve_exact(data, candidates, p, B, alpha=1.5):
         for i, pair in enumerate(od_pairs)
     }
 
-    # 1. Shortest-path times
+    # Shortest-path times
     shortest_times = dict(
         nx.all_pairs_dijkstra_path_length(
             graph, weight="weight"
         )
     )
 
-    # 2. Operating costs
+    # Operating costs
     costs = {
         l: candidates[l]["travel_time"]
         for l in line_ids
     }
 
-    # 3. Acceptable direct connections
+    # Acceptable direct connections
     acceptable = {}
 
     for l in line_ids:
@@ -100,14 +96,12 @@ def solve_exact(data, candidates, p, B, alpha=1.5):
             if direct_time <= alpha * shortest_times[s][t] + 1e-9:
                 acceptable[l, s, t] = 1
 
-    # 4. Objective function
-    # SciPy minimizes, so negate the maximization objective
+    # Objective function
     c = np.zeros(n_vars)
 
     for (s, t), passengers in demand.items():
         c[od_index[s, t]] = -passengers
 
-    # x variables binary; y variables continuous
     integrality = np.zeros(n_vars, dtype=int)
     integrality[:n_lines] = 1
 
@@ -116,7 +110,7 @@ def solve_exact(data, candidates, p, B, alpha=1.5):
         ub=np.ones(n_vars)
     )
 
-    # 5. Build sparse constraint matrix
+    # Build sparse constraint matrix
     rows = []
     cols = []
     values = []
@@ -135,8 +129,6 @@ def solve_exact(data, candidates, p, B, alpha=1.5):
         lower.append(lb)
         upper.append(ub)
 
-    # Direct coverage:
-    # y_st - sum(a_lst * x_l) <= 0
     for s, t in od_pairs:
         coeff = {od_index[s, t]: 1.0}
 
@@ -158,7 +150,7 @@ def solve_exact(data, candidates, p, B, alpha=1.5):
         ub=B
     )
 
-    # 6. All connectivity constraints
+    # All connectivity constraints
     root = stops[0]
     other_stops = [v for v in stops if v != root]
 
@@ -187,7 +179,6 @@ def solve_exact(data, candidates, p, B, alpha=1.5):
                 if crosses:
                     crossing[line_index[l]] = 1.0
 
-            # At least one selected line must cross the cut
             add_constraint(crossing, lb=1.0)
             cut_count += 1
 
@@ -208,7 +199,7 @@ def solve_exact(data, candidates, p, B, alpha=1.5):
     print(f"Total variables: {n_vars}")
     print(f"Total constraints: {len(lower)}")
 
-    # 7. Solve MILP with HiGHS
+    # Solve with HiGHS
     start = perf_counter()
 
     result = milp(

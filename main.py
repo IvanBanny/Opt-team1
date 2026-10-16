@@ -22,7 +22,7 @@ p = 5
 B = 150
 alpha = 1.5
 
-results = solve_exact(
+exact_results = solve_exact(
     data=data,
     candidates=candidates,
     p=p,
