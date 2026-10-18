@@ -1,0 +1,22 @@
+{
+  "reproduction_command": "OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 uv run python run_heuristics.py --output results/heuristics/new-run",
+  "cpu": "Intel(R) Core(TM) Ultra 9 275HX",
+  "versions": {
+    "python": "3.13.13",
+    "numpy": "2.5.4",
+    "networkx": "3.7",
+    "scipy": "1.18.1",
+    "highs": "1.12.0"
+  },
+  "input_hashes": {
+    "dataset/mandl/basis/Edge.giv": "5a507ab712bec116b50b1fa6d648a1eb9bd133d30946b7bdafe28570aa7c2c63",
+    "dataset/mandl/basis/OD.giv": "84871efc32bad0cc250b5b71027133f90a2daa0bec838a29b61ebd4e68fe00d0",
+    "dataset/mandl/basis/Stop.giv": "04c1db4863432a45437db5628b4f50acaa93b2277c4a6ca83d4c02e46bc508c5"
+  },
+  "evidence_hashes": {
+    "pool-all40.json": "2a852a7012ff267b348a0bdab575ae0f0ccdb28993328dbb0c74d7f55a053201",
+    "config.json": "7d8dc1faff402a9d3764864ff4bfb3a39f77589658530f366b7f53870f073c1e",
+    "runs.jsonl": "c489175a0551be5c6b4527f1f2e4cc28331be849d1e630e62888724eafe48f65",
+    "pool-k3.json": "6def34950a63dd611aad31376f9027f3813cf1accac803a15aa7df826d350805"
+  }
+}

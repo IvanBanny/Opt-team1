@@ -2,6 +2,30 @@ from itertools import islice
 import networkx as nx
 
 
+def enumerate_candidates(data, max_time=40) -> dict:
+    """Enumerate simple routes up to max_time minutes, merging reversals.
+
+    Keep subpaths and sort stop sequences for stable route IDs.
+    Positive edge times let us stop extending routes at the time limit.
+    """
+    graph = data["graph"]
+    if any(info["weight"] <= 0 for _, _, info in graph.edges(data=True)):
+        raise ValueError("Route enumeration requires positive edge travel times")
+    routes = {}
+
+    def extend(path, elapsed):
+        if len(path) > 1 and path[0] < path[-1]:
+            routes[tuple(path)] = make_route(path, graph)
+        for stop in sorted(graph[path[-1]]):
+            travel_time = elapsed + graph[path[-1]][stop]["weight"]
+            if stop not in path and travel_time <= max_time:
+                extend(path + [stop], travel_time)
+
+    for stop in sorted(graph):
+        extend([stop], 0.0)
+    return {i: routes[path] for i, path in enumerate(sorted(routes), 1)}
+
+
 def route_from_edges(edge_ids, edges):
     first = edges[edge_ids[0]]
     endpoints = (first["from_stop"], first["to_stop"])

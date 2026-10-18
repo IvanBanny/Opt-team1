@@ -1,4 +1,4 @@
-# Randomized greedy construction + one-line-swap local search
+# Randomized greedy construction and add-or-swap local search
 
 
 from random import Random
@@ -83,7 +83,7 @@ def solve_heuristic(data, candidates, p, B, alpha=1.5,
         selected = []
         covered = set()
         spent = 0.0
-        # Try different balances between connecting stops and covering demand.
+        # vary the weight on connectivity between restarts
         connection_weight = (1, 2, 4, 8, 16)[restart_idx % 5]
         rcl_size = (1, 2, 3, 5)[(restart_idx // 5) % 4]
 
@@ -97,7 +97,7 @@ def solve_heuristic(data, candidates, p, B, alpha=1.5,
                 if line_id in selected or spent + costs[line_id] > B + 1e-9:
                     continue
                 gain = sum(demand[od] for od in covers[line_id] - covered)
-                # A route links all components containing any of its stops.
+                # visiting k components merges them into one
                 connected_components = {comp_of[s] for s in stops_on_route[line_id]}
                 component_reduction = len(connected_components) - 1
                 if connected and gain == 0:
@@ -106,8 +106,7 @@ def solve_heuristic(data, candidates, p, B, alpha=1.5,
                     continue
                 score = ((gain / total_demand if total_demand else 0.0)
                          + connection_weight * component_reduction / max(1, num_stops - 1))
-                # A small preference for lower-cost lines, without making
-                # cost more important than connectivity and coverage.
+                # slightly favor cheaper routes
                 score /= 1.0 + 0.1 * costs[line_id] / B
                 choices.append((score, line_id))
 
@@ -129,7 +128,7 @@ def solve_heuristic(data, candidates, p, B, alpha=1.5,
             selected_set = set(selected)
             available = [l for l in line_ids if l not in selected_set]
 
-            # Add a line if a free slot and enough budget remain.
+            # Add
             if len(selected) < p:
                 for new in available:
                     neighbor = selected + [new]
@@ -138,7 +137,7 @@ def solve_heuristic(data, candidates, p, B, alpha=1.5,
                         if score > best_score and feasible(neighbor):
                             best_score, best_neighbor = score, neighbor
 
-            # Replace one selected line with one unselected line.
+            # Swap
             for old in selected:
                 for new in available:
                     neighbor = [new if l == old else l for l in selected]
@@ -172,8 +171,9 @@ def solve_heuristic(data, candidates, p, B, alpha=1.5,
     best = initial_solutions[0]
     best_score = coverage(best)
     greedy_best_score = best_score
+    greedy_selected = list(best)
 
-    # Compare the best feasible greedy solution with local-search results.
+    # Greedy vs local search
     print("\n--- Greedy Only ---")
     print("Restarts:", restarts)
     print("Unique feasible starts:", len(feasible_starts))
@@ -202,6 +202,9 @@ def solve_heuristic(data, candidates, p, B, alpha=1.5,
         "feasible": True,
         "selected_lines": best,
         "objective": float(best_score),
+        "greedy_objective": float(greedy_best_score),
+        "greedy_selected_lines": greedy_selected,
+        "local_search_improvement": float(best_score - greedy_best_score),
         "total_cost": sum(costs[l] for l in best),
         "coverage_pct": 100 * best_score / total_demand if total_demand else 0.0,
         "runtime": perf_counter() - start_time,

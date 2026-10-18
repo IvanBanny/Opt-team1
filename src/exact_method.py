@@ -17,7 +17,8 @@ def check_connectivity(data, candidates, selected_lines):
     return nx.is_connected(graph)
 
 
-def solve_exact(data, candidates, p, B, alpha=1.5):
+def solve_exact(data, candidates, p, B, alpha=1.5,
+                time_limit=300, return_model=False):
     graph = data["graph"]
 
     if not nx.is_connected(graph):
@@ -26,7 +27,7 @@ def solve_exact(data, candidates, p, B, alpha=1.5):
     if alpha < 1:
         raise ValueError("alpha must be at least 1.")
 
-    # Positive-demand OD pairs
+    # OD pairs with demand
     demand = {
         pair: value
         for pair, value in data["demand"].items()
@@ -54,20 +55,20 @@ def solve_exact(data, candidates, p, B, alpha=1.5):
         for i, pair in enumerate(od_pairs)
     }
 
-    # Shortest-path times
+    # Shortest travel times
     shortest_times = dict(
         nx.all_pairs_dijkstra_path_length(
             graph, weight="weight"
         )
     )
 
-    # Operating costs
+    # Line costs
     costs = {
         l: candidates[l]["travel_time"]
         for l in line_ids
     }
 
-    # Acceptable direct connections
+    # Direct connections within the detour limit
     acceptable = {}
 
     for l in line_ids:
@@ -96,7 +97,7 @@ def solve_exact(data, candidates, p, B, alpha=1.5):
             if direct_time <= alpha * shortest_times[s][t] + 1e-9:
                 acceptable[l, s, t] = 1
 
-    # Objective function
+    # Maximize covered demand
     c = np.zeros(n_vars)
 
     for (s, t), passengers in demand.items():
@@ -110,7 +111,7 @@ def solve_exact(data, candidates, p, B, alpha=1.5):
         ub=np.ones(n_vars)
     )
 
-    # Build sparse constraint matrix
+    # Constraints
     rows = []
     cols = []
     values = []
@@ -138,19 +139,19 @@ def solve_exact(data, candidates, p, B, alpha=1.5):
 
         add_constraint(coeff, ub=0.0)
 
-    # Maximum number of lines
+    # Line limit
     add_constraint(
         {line_index[l]: 1.0 for l in line_ids},
         ub=p
     )
 
-    # Operating budget
+    # Effort budget
     add_constraint(
         {line_index[l]: costs[l] for l in line_ids},
         ub=B
     )
 
-    # All connectivity constraints
+    # Connectivity cuts
     root = stops[0]
     other_stops = [v for v in stops if v != root]
 
@@ -193,13 +194,16 @@ def solve_exact(data, candidates, p, B, alpha=1.5):
         ub=np.array(upper)
     )
 
+    if return_model:
+        return c, constraints
+
     print(f"Candidate lines: {n_lines}")
     print(f"Positive-demand OD pairs: {n_od}")
     print(f"Connectivity constraints: {cut_count}")
     print(f"Total variables: {n_vars}")
     print(f"Total constraints: {len(lower)}")
 
-    # Solve with HiGHS
+    # Solve
     start = perf_counter()
 
     result = milp(
@@ -210,10 +214,14 @@ def solve_exact(data, candidates, p, B, alpha=1.5):
         options={
             "disp": False,
             "mip_rel_gap": 0.0,
+            "time_limit": time_limit,
         }
     )
 
     runtime = perf_counter() - start
+    bound = getattr(result, "mip_dual_bound", None)
+    upper_bound = (-float(bound)
+                   if bound is not None and np.isfinite(bound) else None)
 
     print("\n--- Exact method results ---")
     print("Solver message:", result.message)
@@ -222,6 +230,9 @@ def solve_exact(data, candidates, p, B, alpha=1.5):
     if result.x is None:
         print("No feasible solution was returned.")
         return {
+            "feasible": False,
+            "upper_bound": upper_bound,
+            "gap": getattr(result, "mip_gap", None),
             "status": result.status,
             "message": result.message,
             "runtime": runtime,
@@ -266,6 +277,8 @@ def solve_exact(data, candidates, p, B, alpha=1.5):
         )
 
     return {
+        "feasible": True,
+        "upper_bound": upper_bound,
         "selected_lines": selected,
         "objective": covered_demand,
         "total_cost": total_cost,

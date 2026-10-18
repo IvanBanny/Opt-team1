@@ -7,11 +7,11 @@ from src.heuristic_method import solve_heuristic
 
 root = Path(__file__).resolve().parent
 
-# Select dataset
+# Dataset
 data = load_dataset(root / "dataset/mandl/basis")
 # data = load_dataset(root / "dataset/toy/basis")
 
-# Candidate generation parameters
+# Candidate routes
 k = 3
 max_time = 40
 
@@ -33,7 +33,7 @@ for name, p, B in scenarios:
     print(f"p = {p}, B = {B}, alpha = {alpha}")
     print(f"{'=' * 60}")
 
-    # Exact method
+    # Exact
     exact_start = perf_counter()
 
     exact_results = solve_exact(
@@ -46,7 +46,7 @@ for name, p, B in scenarios:
 
     exact_time = perf_counter() - exact_start
 
-    # Heuristic method
+    # Greedy + local search
     heuristic_start = perf_counter()
 
     heuristic_results = solve_heuristic(
@@ -61,7 +61,7 @@ for name, p, B in scenarios:
 
     heuristic_time = perf_counter() - heuristic_start
 
-    # Summary
+    # Results
     print(f"\n--- SUMMARY: {name} ---")
 
     print("Exact status:", exact_results.get("message"))

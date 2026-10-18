@@ -1,0 +1,22 @@
+[project]
+name = "mandl-line-planning"
+version = "0.1.0"
+description = "Evaluation and experiments for Optimization group project"
+requires-python = ">=3.13"
+dependencies = [
+    "numpy",
+    "networkx",
+    "scipy"
+]
+
+[dependency-groups]
+dev = ["ruff"]
+
+[tool.ruff]
+line-length = 88
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]
+
+[tool.ruff.lint.isort]
+force-single-line = true

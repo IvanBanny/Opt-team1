@@ -1,0 +1,34 @@
+{
+  "alpha": 1.5,
+  "scenarios": [
+    [
+      5,
+      150
+    ],
+    [
+      3,
+      100
+    ]
+  ],
+  "seeds": [
+    42,
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8
+  ],
+  "restarts": 30,
+  "top_starts": 8,
+  "max_local_steps": 20,
+  "cg_seed": 42,
+  "batch_size": 20,
+  "tolerance": 1e-07,
+  "milp_time_limit": 300,
+  "k": 3,
+  "max_route_time": 40
+}
