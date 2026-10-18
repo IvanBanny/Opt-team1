@@ -208,7 +208,7 @@ def solve_exact(data, candidates, p, B, alpha=1.5):
         bounds=bounds,
         constraints=constraints,
         options={
-            "disp": True,
+            "disp": False,
             "mip_rel_gap": 0.0,
         }
     )
